@@ -19,3 +19,8 @@
 ^README\.Rmd$
 .Rproj.user
 tests\
+.Rhistory
+*.png
+*.nc
+*.pdf
+*.html

@@ -4,7 +4,8 @@
 <!-- badges: start -->
 <!-- badges: end -->
 
-The goal of phenofit.shiny is to ...
+phenofit.shiny is the shiny app of `phenofit` package. 
+...
 
 ## Installation
 
@@ -14,8 +15,6 @@ devtools::install_github("kongdd/phenofit.shiny")
 ```
 
 ## Example
-
-This is a basic example which shows you how to solve a common problem:
 
 ``` r
 library(phenofit.shiny)

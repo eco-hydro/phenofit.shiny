@@ -1,0 +1,123 @@
+---
+title: "R Notebook"
+output:
+  html_document:
+    df_print: paged
+---
+
+
+## 1.1 Initial weights for input data
+
+Load packages.
+```{r load pkg, message=FALSE}
+source("../../test/load_pkgs.R")
+source("../../R/fix_phenofit.R")
+
+# directory for images
+check_dir("images")
+```
+
+## Generate SpatialGrids 
+```{r}
+file = "G:/Github/phenology/China_Phenology/TP_phenology/clipTP_nc/grid_nc/NDVI_SPOT_TP_GRID.nc"
+fid  <- nc_open(file)
+
+d_date <- fread("N:/Research/phenology/phenology_TP/inst/extdata/dates_SPOT.txt") %>% cbind(I = 1:nrow(.), .)
+date = as.POSIXct(d_date$mid) %>% date()
+
+mat_grid    <- ncvar_get(fid, "grid")
+I_grid      <- fid$dim$Id$vals %>% set_dim(NULL)
+# I_grid_fix  <- fix_Igrid(mat_grid, I_grid)
+
+# 27
+# SpatialGrids
+range    = c(73, 105, 25, 40)
+cellsize = 1/112
+# grid     = get_grid(range, cellsize)
+# gridclip <- grid[I_grid_fix, ]
+# r <- raster(gridclip) # gridId has changed
+r = get_grid2(range, cellsize) %>% mask_notin(I_grid)
+
+par(mrow = c(2, 3))
+# gridclip$id <- 1
+plot(r)
+
+poly     <- rgdal::readOGR("E:/Research/phenology/DATA/shp/TP/TP_poly.shp")
+poly_veg <- rgdal::readOGR("E:/Research/phenology/DATA/shp/TP/TP_vegZoneSolve84.shp")
+sp       <- rgdal::readOGR("E:/Research/phenology/DATA/shp/TP/TP_agrmet_pnts25.shp")
+
+proj4string(sp) <- proj4string(r)
+```
+
+## check snow distribution
+
+```{r, fig.width=10, fig.height=10, eval=FALSE}
+par(mfrow = c(4, 3), mar = c(3, 2, 2, 1), mgp = c(3, 0.6, 0))
+d_nongrow = d_date[ingrow == 0]
+foreach(i = 27:nrow(d_nongrow), icount(12)) %do% {
+  datei = d_date$mid[i] %>% as.POSIXct() %>% date()
+  I_time = d_date$I[i]
+
+  VI_qc = ncvar_get(fid, "VI_quality", start = c(1, I_time), count = c(-1, 1)) # 1998-08-26, all pixel
+  vals <- getBits(VI_qc, 0, 2)
+  snow <- vals == 4
+  r[I_grid] <- snow
+  plot(r, main = datei)
+}
+i
+```
+
+
+## Extract Representative Points 
+
+Replace sp with raster
+```{r}
+# check about x
+cbind(r[I_grid], I_grid) %>% head()
+
+I_sp  <- cellFromXY(r, sp)
+d_pos <- match2(I_sp, I_grid)
+I_bad <- match(I_sp, d_pos$x) %>% which.na # not match point
+d_pos
+
+# extarct points from nc efficiently
+inds = d_pos$I_y
+lst = foreach(k = seq(inds)) %do% {
+    i = inds[k]
+    runningId(k)
+
+    NDVI = ncvar_get(fid, "NDVI"      , start = c(i, 1), count = c(1, -1))
+    qc   = ncvar_get(fid, "VI_quality", start = c(i, 1), count = c(1, -1))
+    data.table(NDVI, qc)
+}
+lst %<>% set_names(sp$VId[-I_bad])
+df <- lst %>% melt_list("site")
+```
+
+```{r}
+# good, works 
+lst_pheno <- foreach(d = lst, site = names(lst), i = icount()) %do% {
+    titlestr = glue("[{i}] {site}")
+    d_qc = qc_SPOT(qc, wmin = 0.2)
+  
+    # if titlestr == NULL, then no figure produced; if show, then it will be open 
+    ans = phenofit_site(y = d$NDVI, t = date, w = d_qc$w, QC_flag = d_qc$QC_flag,
+        nptperyear = 36,
+        prefix = "", titlestr = titlestr, show = TRUE)
+}
+```
+
+
+```{r}
+library(leaflet)
+(m <- leaflet() %>% 
+  addProviderTiles(providers$Esri.WorldImagery) %>%
+  setView(mean(range[1:2]), mean(range[3:4]), 5) %>% 
+  addPolygons(data = poly_veg, fill = FALSE, weight = 2, color = "red") %>% 
+  addPolygons(data = poly, fill = FALSE) %>% 
+  # addRasterImage(r, opacity = 0.8) %>% 
+  addMarkers(data = sp, label = ~VId) 
+)
+  # addLegend() # , colors = pal
+  # addLegend(pal = pal, values = values(r), title = "Surface temp")
+```

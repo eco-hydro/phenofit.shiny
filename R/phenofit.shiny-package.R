@@ -1,6 +1,6 @@
 #' @import Ipaper phenofit magrittr data.table
 #' @importFrom purrr map
-#' 
+#'
 #' @keywords internal
 "_PACKAGE"
 

@@ -3,3 +3,4 @@
 ^inst/check_season$
 ^inst/phenofit$
 ^LICENSE\.md$
+^inst/extdata$
