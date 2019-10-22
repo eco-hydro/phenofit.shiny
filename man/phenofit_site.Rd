@@ -5,7 +5,7 @@
 \title{Extract Vegetation Phenology at site scale}
 \usage{
 phenofit_site(y, t, w, QC_flag, nptperyear = 36, prefix = "",
-  titlestr = NULL, show = FALSE)
+  titlestr = NULL, show = FALSE, ...)
 }
 \arguments{
 \item{y}{Numeric vector, vegetation index time-series}
@@ -20,6 +20,8 @@ in the range of \code{c("snow", "cloud", "shadow", "aerosol", "marginal", "good"
 used for visualization in \code{\link[=get_pheno]{get_pheno()}} and \code{\link[=plot_phenofit]{plot_phenofit()}}.}
 
 \item{nptperyear}{Integer, number of images per year.}
+
+\item{...}{other parameters to \code{\link[phenofit:curvefits]{phenofit::curvefits()}}}
 }
 \description{
 Extract Vegetation Phenology at site scale

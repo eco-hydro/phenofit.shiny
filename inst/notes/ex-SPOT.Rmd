@@ -19,10 +19,10 @@ check_dir("images")
 
 ## Generate SpatialGrids 
 ```{r}
-file = "G:/Github/phenology/China_Phenology/TP_phenology/clipTP_nc/grid_nc/NDVI_SPOT_TP_GRID.nc"
+file = "../extdata/NDVI_SPOT_TP_GRID.nc"
 fid  <- nc_open(file)
 
-d_date <- fread("N:/Research/phenology/phenology_TP/inst/extdata/dates_SPOT.txt") %>% cbind(I = 1:nrow(.), .)
+d_date <- fread("../extdata/dates_SPOT.txt") %>% cbind(I = 1:nrow(.), .)
 date = as.POSIXct(d_date$mid) %>% date()
 
 mat_grid    <- ncvar_get(fid, "grid")
@@ -41,7 +41,47 @@ r = get_grid2(range, cellsize) %>% mask_notin(I_grid)
 par(mrow = c(2, 3))
 # gridclip$id <- 1
 plot(r)
+```
 
+## tidy SPOT phenological metrics
+```{r}
+# grid_avhrr
+load("N:/Research/phenology/phenology_TP/data/grid_avhrr.rda")
+r2 = raster(grid_avhrr)
+
+indir <- "E:/SciData/pheno_SPOT_TP (1998-2013)/csv"
+files <- dir(indir, "*.csv", full.names = TRUE)
+lst <- llply(files, function(file){
+  d <- fread(file)
+  d[, lapply(.SD, mean, na.rm = TRUE), .(I_grid, flag, origin), .SDcols = colnames(d)[-(1:4)]]
+}, .progress = "text")
+
+df <- do.call(rbind, lst)
+grps = paste0(1998:2013, "_1")
+
+lst_spot = foreach(grp = grps, i = icount()) %do% {
+  runningId(i, prefix = grp)
+  d <- df[flag == grp, ]
+  I <- I_grid[d$I_grid]
+  
+  nvar = ncol(d) - 3
+  
+  mat <- foreach(j = 1:nvar, .combine = cbind) %do% {
+    runningId(j)
+    values(r)    <- NA
+    values(r)[I] <- d[[j + 3]] # begin from , 4
+    rnew         <- resample(r, r2)
+    values(rnew)
+  }
+}
+
+saveRDS(lst_spot, file = "phenofit_SPOT_TP_112deg.RDS")
+# r[I_grid[d$I_grid]]@data
+```
+
+
+
+```{r}
 poly     <- rgdal::readOGR("E:/Research/phenology/DATA/shp/TP/TP_poly.shp")
 poly_veg <- rgdal::readOGR("E:/Research/phenology/DATA/shp/TP/TP_vegZoneSolve84.shp")
 sp       <- rgdal::readOGR("E:/Research/phenology/DATA/shp/TP/TP_agrmet_pnts25.shp")
@@ -49,7 +89,7 @@ sp       <- rgdal::readOGR("E:/Research/phenology/DATA/shp/TP/TP_agrmet_pnts25.s
 proj4string(sp) <- proj4string(r)
 ```
 
-## check snow distribution
+<!-- ## check snow distribution -->
 
 ```{r, fig.width=10, fig.height=10, eval=FALSE}
 par(mfrow = c(4, 3), mar = c(3, 2, 2, 1), mgp = c(3, 0.6, 0))

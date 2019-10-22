@@ -24,3 +24,8 @@ tests\
 *.nc
 *.pdf
 *.html
+
+OUTPUT/
+
+*.rda
+*.mat

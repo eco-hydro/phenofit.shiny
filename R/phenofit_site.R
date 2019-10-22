@@ -1,10 +1,11 @@
 #' Extract Vegetation Phenology at site scale
 #'
 #' @inheritParams phenofit::check_input
+#' @param ... other parameters to [phenofit::curvefits()]
 #'
 #' @export
 phenofit_site <- function(y, t, w, QC_flag, nptperyear = 36,
-    prefix = "", titlestr = NULL, show = FALSE)
+    prefix = "", titlestr = NULL, show = FALSE, ...)
 {
     # Parameters
     # lambda   <- 5    # non-parameter Whittaker, only suit for 16-day. Other time-scale should assign a lambda.
@@ -41,10 +42,10 @@ phenofit_site <- function(y, t, w, QC_flag, nptperyear = 36,
                   wFUN = wFUN,
                   iters = 2,
                   nextend = 2, maxExtendMonth = 3, minExtendMonth = 1, minPercValid = 0.2,
-                  print = print, verbose = FALSE)
+                  print = print, verbose = FALSE, ...)
 
     ## check the curve fitting parameters
-    # l_param <- get_param(fit)
+    l_param <- get_param(fit)
     d_fit   <- get_fitting(fit)
     # d_gof   <- get_GOF(fit)
 

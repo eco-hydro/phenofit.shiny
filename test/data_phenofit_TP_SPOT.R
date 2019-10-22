@@ -1,4 +1,5 @@
 source("test/load_pkgs.R")
+devtools::load_all()
 
 # add date
 d_date <- fread("inst/extdata/dates_SPOT.txt")
@@ -17,7 +18,10 @@ check_dir(outdir)
 
 InitCluster(12)
 
-temp <- foreach(inds = l_ind[700:1000], i = icount()) %do% {
+grps = 459:1
+temp <- foreach(inds = l_ind[grps], grp = grps, icount()) %do% {
+  runningId(grp)
+
   I_begin  = min(inds)
   n_time   = length(inds)
 
@@ -27,7 +31,7 @@ temp <- foreach(inds = l_ind[700:1000], i = icount()) %do% {
   # browser()
   # profvis::profvis({
     l_pheno = foreach(y = mat_NDVI, qc = mat_qc, j = icount()) %dopar% {
-      runningId(j)
+      Ipaper::runningId(j)
       # titlestr = "a"N
       # titlestr = glue("[{i}] {site}")
       d_qc = qc_SPOT(qc, wmin = 0.2)
@@ -43,10 +47,10 @@ temp <- foreach(inds = l_ind[700:1000], i = icount()) %do% {
       )
     }
   # })
-  df = l_pheno %>% set_names(inds) %>% rm_empty() %>% melt_list("I_grid")
+  df = l_pheno %>% set_names(inds[1:length(l_pheno)]) %>% rm_empty() %>% melt_list("I_grid")
 
-  outfile = sprintf("{outdir}/phenofit_TP_SPOT_(1998-2013)_112deg_[%04d]", outdir, i)
-  write(df, outfile)
+  outfile = sprintf("%s/phenofit_TP_SPOT_(1998-2013)_112deg_[%04d].csv", outdir, grp)
+  fwrite(df, outfile)
 }
 
 # sites        <- unique(df$site)
