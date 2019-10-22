@@ -1,3 +1,5 @@
+# source("test/load_pkgs.R")
+# source("../../R/fix_phenofit.R")
 suppressMessages({
     library(data.table)
     library(magrittr)
@@ -15,4 +17,11 @@ suppressMessages({
     library(foreach)
     library(iterators)
 })
-# source("../../R/fix_phenofit.R")
+
+PhenoMetrics = c("TRS2.sos", "TRS2.eos", "TRS5.sos", "TRS5.eos", "TRS6.sos", "TRS6.eos",
+             "DER.sos", "DER.pop", "DER.eos",
+              "UD", "SD", "DD", "RD", "Greenup", "Maturity", "Senescence", "Dormancy")
+
+raster2SpatialPixel <- function(r) {
+    as(r, "SpatialGridDataFrame")
+}

@@ -5,7 +5,6 @@ output:
     df_print: paged
 ---
 
-
 ## 1.1 Initial weights for input data
 
 Load packages.
@@ -45,40 +44,8 @@ plot(r)
 
 ## tidy SPOT phenological metrics
 ```{r}
-# grid_avhrr
-load("N:/Research/phenology/phenology_TP/data/grid_avhrr.rda")
-r2 = raster(grid_avhrr)
-
-indir <- "E:/SciData/pheno_SPOT_TP (1998-2013)/csv"
-files <- dir(indir, "*.csv", full.names = TRUE)
-lst <- llply(files, function(file){
-  d <- fread(file)
-  d[, lapply(.SD, mean, na.rm = TRUE), .(I_grid, flag, origin), .SDcols = colnames(d)[-(1:4)]]
-}, .progress = "text")
-
-df <- do.call(rbind, lst)
-grps = paste0(1998:2013, "_1")
-
-lst_spot = foreach(grp = grps, i = icount()) %do% {
-  runningId(i, prefix = grp)
-  d <- df[flag == grp, ]
-  I <- I_grid[d$I_grid]
-  
-  nvar = ncol(d) - 3
-  
-  mat <- foreach(j = 1:nvar, .combine = cbind) %do% {
-    runningId(j)
-    values(r)    <- NA
-    values(r)[I] <- d[[j + 3]] # begin from , 4
-    rnew         <- resample(r, r2)
-    values(rnew)
-  }
-}
-
-saveRDS(lst_spot, file = "phenofit_SPOT_TP_112deg.RDS")
 # r[I_grid[d$I_grid]]@data
 ```
-
 
 
 ```{r}
