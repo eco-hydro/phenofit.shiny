@@ -1,6 +1,9 @@
 
 # phenofit.shiny
 
+> **_This repository is not maintained any more. Please do not use package any more._**   
+> You can find application cases in <https://github.com/eco-hydro/phenofit-scripts>.
+
 <!-- badges: start -->
 <!-- badges: end -->
 
